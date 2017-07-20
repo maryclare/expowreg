@@ -50,13 +50,13 @@ lpbeta <- function(beta, tau.sq, q) {
 }
 
 sample.beta <- function(A, b, gamma, sig.sq, tau.sq, q, beta.old, sing.A,
-                        d, Vt, DUty, W) {
+                        d, Vt, DUty, W, diag.A) {
 
   delta <- sqrt(gamma(1/q)/gamma(3/q))*sqrt(tau.sq/2)*gamma^(1/q)
 
   # Check that design matrix is diagonal, if not use samp.signtmvnorm
   # otherwise can just sample from truncated univariate normals
-  if (min(abs(A[lower.tri(A, diag = FALSE)])) > 10^(-12)) {
+  if (!diag.A) {
     beta <- samp.singtmvnorm(beta.start = beta.old, DUty = DUty,
                              delta = delta, d = d,
                              Vt = Vt,
@@ -111,6 +111,7 @@ epr.sampler <- function(X, y,
   W <- crossprod(t(rbind(diag(rep(1, p)), diag(rep(-1, p)))), t(Vt))
   A <- tcrossprod(tcrossprod(Vt, diag(d)))
   sing.A <- length(svd.X$d) < ncol(X)
+  diag.A <- !(min(abs(A[lower.tri(A, diag = FALSE)])) > 10^(-6))
 
   if (sing.A) {
     del <- (1 - min(eigen(A)$values))
@@ -139,7 +140,7 @@ epr.sampler <- function(X, y,
                               sig.sq = sig.sq,
                               tau.sq =  tau.sq, q = q,
                               beta.old = betas[i - 1, ], sing.A = sing.A, d = d,
-                              Vt = Vt, DUty = DUty, W = W)
+                              Vt = Vt, DUty = DUty, W = W, diag.A = diag.A)
     if (comp.lik) {
       lls[i] <- log.lik(y = y, X = X, beta = betas[i, ], tau.sq = tau.sq,
                         sig.sq = sig.sq, q = q)
