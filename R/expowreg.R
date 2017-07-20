@@ -111,7 +111,7 @@ epr.sampler <- function(X, y,
   W <- crossprod(t(rbind(diag(rep(1, p)), diag(rep(-1, p)))), t(Vt))
   A <- tcrossprod(tcrossprod(Vt, diag(d)))
   sing.A <- length(svd.X$d) < ncol(X)
-  diag.A <- !(min(abs(A[lower.tri(A, diag = FALSE)])) > 10^(-6))
+  diag.A <- sum(abs(A[lower.tri(A, diag = FALSE)]) <= 10^(-14)) == p*(p - 1)/2
 
   if (sing.A) {
     del <- (1 - min(eigen(A)$values))
