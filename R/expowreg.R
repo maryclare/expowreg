@@ -184,5 +184,7 @@ epr.sampler <- function(X, y,
   }
   return(list("beta" = betas[!1:(num.samp + 1) %in% 1:burn.in, ],
               "gamma" = gammas[!1:(num.samp + 1) %in% 1:burn.in, ],
+              "sig.sq" = sig.sqs[!1:(num.samp + 1) %in% 1:burn.in],
+              "tau.sq" = tau.sqs[!1:(num.samp + 1) %in% 1:burn.in],
               "ll" = lls[!1:(num.samp + 1) %in% 1:burn.in]))
 }
