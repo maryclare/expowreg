@@ -3,13 +3,32 @@ library(truncdist) # Use to sample from truncated gamma directly
 library(actuar) # Use to access inverse gamma probability function from truncdist functons
 library(BayesBridge) # Use to sample from truncated univ. normal
 
-log.lik <- function(y, X, beta, tau.sq, sig.sq, q, alph.tau, eta.tau,
-                    alph.sig, eta.sig) {
+sample.sigma.sq <- function(y, X, beta, q) {
+  n <- length(y)
+  p <- ncol(X)
+  bb <- crossprod(y - crossprod(t(X), beta))/2
+  aa <- (n + 1)/2 + 1
+  return(rinvgamma(1, aa, 1/bb))
+}
+
+sample.tau.sq <- function(beta, q) {
+  p <- length(beta)
+  aa <- (p + 1)/q + 1
+  bb <- sum(abs(beta*(gamma(1/q)/gamma(3/q))^(-1/2))^q)
+  return((rinvgamma(1, aa, 1/bb))^(2/q))
+}
+
+log.lik <- function(y, X, beta, tau.sq, sig.sq, q, samp.sig.sq, samp.tau.sq) {
   p <- ncol(X)
   n <- nrow(X)
   r <- y - crossprod(t(X), beta)
   dnorm(crossprod(r),
-        sd = sqrt(sig.sq), log = TRUE) + lpbeta(beta, tau.sq, q)
+        sd = sqrt(sig.sq), log = TRUE) + lpbeta(beta, tau.sq, q) +
+    samp.tau.sq*dgamma(tau.sq^(-q/2), (p + 1)/q + 1,
+           (gamma(1/q)/gamma(3/q))^(-q/2)*sum(abs(beta)^q),
+           log = TRUE) +
+    samp.sig.sq*dgamma(1/sig.sq, (n + 1)/2 + 1,
+           crossprod(r)/2, log = TRUE)
 }
 
 # Found method for MVNORM simulation in Polson, Scott, Windle (2014)
@@ -98,7 +117,7 @@ epr.sampler <- function(X, y,
                        num.samp = 1000, print.iter = FALSE,
                        num.chains = 1,
                        q,
-                       sig.sq, tau.sq,
+                       sig.sq = NULL, tau.sq = NULL,
                        burn.in = 500, comp.lik = TRUE,
                        b.start = NULL) {
   p <- ncol(X)
@@ -124,7 +143,17 @@ epr.sampler <- function(X, y,
   }
 
   betas <- gammas <- matrix(nrow = num.samp + 1, ncol = ncol(X))
-  lls <- numeric(num.samp + 1)
+  sig.sqs <- tau.sqs <- lls <- numeric(num.samp + 1)
+  if (!is.null(sig.sq)) {
+    sig.sqs <- rep(sig.sqs, num.samp + 1)
+  } else {
+    sig.sqs[1] <- 1
+  }
+  if (!is.null(tau.sq)) {
+    tau.sqs <- rep(sig.sqs, num.samp + 1)
+  } else {
+    tau.sqs[1] <- 1
+  }
   betas[1, ] <- b
   if (q > 2) { # Need to be careful about starting values when q is large, as q gets large range of beta gets restricted by prior
     betas[1, ] <- 0.001*rnorm(p)
@@ -135,15 +164,22 @@ epr.sampler <- function(X, y,
   for (i in 2:(num.samp + 1)) {
     if (print.iter) {cat("i = ", i, "\n")}
 
-    gammas[i, ] <- sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sq, q = q)
+    if (is.null(tau.sq)) {
+      tau.sqs[i] <- sample.tau.sq(beta = betas[i - 1, ], q = q)
+    }
+    if (is.null(sig.sq)) {
+      sig.sqs[i] <- sample.sigma.sq(y = y, X = X, betas[i - 1, ], q = q)
+    }
+    gammas[i, ] <- sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
     betas[i, ] <- sample.beta(A = A, b = b, gamma = gammas[i, ],
-                              sig.sq = sig.sq,
-                              tau.sq =  tau.sq, q = q,
+                              sig.sq = sig.sqs[i],
+                              tau.sq =  tau.sqs[i], q = q,
                               beta.old = betas[i - 1, ], sing.A = sing.A, d = d,
                               Vt = Vt, DUty = DUty, W = W, diag.A = diag.A)
     if (comp.lik) {
-      lls[i] <- log.lik(y = y, X = X, beta = betas[i, ], tau.sq = tau.sq,
-                        sig.sq = sig.sq, q = q)
+      lls[i] <- log.lik(y = y, X = X, beta = betas[i, ], tau.sq = tau.sqs[i],
+                        sig.sq = sig.sqs[i], q = q, samp.sig.sq = is.null(sig.sq),
+                        samp.tau.sq = is.null(tau.sq))
     }
   }
   return(list("beta" = betas[!1:(num.samp + 1) %in% 1:burn.in, ],
