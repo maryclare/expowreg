@@ -3,20 +3,20 @@ library(truncdist) # Use to sample from truncated gamma directly
 library(actuar) # Use to access inverse gamma probability function from truncdist functons
 library(BayesBridge) # Use to sample from truncated univ. normal
 
-sample.sigma.sq <- function(y, X, beta, q) {
-  n <- length(y)
-  p <- ncol(X)
-  bb <- crossprod(y - crossprod(t(X), beta))/2
-  aa <- (n + 1)/2 + 1
-  return(rinvgamma(1, aa, 1/bb))
-}
-
-sample.tau.sq <- function(beta, q) {
-  p <- length(beta)
-  aa <- (p + 1)/q + 1
-  bb <- sum(abs(beta*(gamma(1/q)/gamma(3/q))^(-1/2))^q)
-  return((rinvgamma(1, aa, 1/bb))^(2/q))
-}
+# sample.sigma.sq <- function(y, X, beta, q) {
+#   n <- length(y)
+#   p <- ncol(X)
+#   bb <- crossprod(y - crossprod(t(X), beta))/2
+#   aa <- (n + 1)/2 + 1
+#   return(rinvgamma(1, aa, 1/bb))
+# }
+#
+# sample.tau.sq <- function(beta, q) {
+#   p <- length(beta)
+#   aa <- (p + 1)/q + 1
+#   bb <- sum(abs(beta*(gamma(1/q)/gamma(3/q))^(-1/2))^q)
+#   return((rinvgamma(1, aa, 1/bb))^(2/q))
+# }
 
 log.lik <- function(y, X, beta, tau.sq, sig.sq, q, samp.sig.sq, samp.tau.sq) {
   p <- ncol(X)
@@ -144,13 +144,13 @@ epr.sampler <- function(X, y,
 
   betas <- gammas <- matrix(nrow = num.samp + 1, ncol = ncol(X))
   sig.sqs <- tau.sqs <- lls <- numeric(num.samp + 1)
-  if (!is.null(sig.sq)) {
+  if (TRUE) {
     sig.sqs <- rep(sig.sqs, num.samp + 1)
   } else {
     sig.sqs[1] <- 1
   }
-  if (!is.null(tau.sq)) {
-    tau.sqs <- rep(sig.sqs, num.samp + 1)
+  if (TRUE) {
+    tau.sqs <- rep(tau.sqs, num.samp + 1)
   } else {
     tau.sqs[1] <- 1
   }
@@ -164,10 +164,10 @@ epr.sampler <- function(X, y,
   for (i in 2:(num.samp + 1)) {
     if (print.iter) {cat("i = ", i, "\n")}
 
-    if (is.null(tau.sq)) {
+    if (FALSE) {
       tau.sqs[i] <- sample.tau.sq(beta = betas[i - 1, ], q = q)
     }
-    if (is.null(sig.sq)) {
+    if (FALSE) {
       sig.sqs[i] <- sample.sigma.sq(y = y, X = X, betas[i - 1, ], q = q)
     }
     gammas[i, ] <- sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
@@ -178,8 +178,8 @@ epr.sampler <- function(X, y,
                               Vt = Vt, DUty = DUty, W = W, diag.A = diag.A)
     if (comp.lik) {
       lls[i] <- log.lik(y = y, X = X, beta = betas[i, ], tau.sq = tau.sqs[i],
-                        sig.sq = sig.sqs[i], q = q, samp.sig.sq = is.null(sig.sq),
-                        samp.tau.sq = is.null(tau.sq))
+                        sig.sq = sig.sqs[i], q = q, samp.sig.sq = FALSE,
+                        samp.tau.sq = FALSE)
     }
   }
   return(list("beta" = betas[!1:(num.samp + 1) %in% 1:burn.in, ],
