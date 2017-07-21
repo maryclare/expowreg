@@ -145,12 +145,12 @@ epr.sampler <- function(X, y,
   betas <- gammas <- matrix(nrow = num.samp + 1, ncol = ncol(X))
   sig.sqs <- tau.sqs <- lls <- numeric(num.samp + 1)
   if (TRUE) {
-    sig.sqs <- rep(sig.sqs, num.samp + 1)
+    sig.sqs <- rep(sig.sq, num.samp + 1)
   } else {
     sig.sqs[1] <- 1
   }
   if (TRUE) {
-    tau.sqs <- rep(tau.sqs, num.samp + 1)
+    tau.sqs <- rep(tau.sq, num.samp + 1)
   } else {
     tau.sqs[1] <- 1
   }
