@@ -3,11 +3,11 @@ library(truncdist) # Use to sample from truncated gamma directly
 library(actuar) # Use to access inverse gamma probability function from truncdist functons
 library(BayesBridge) # Use to sample from truncated univ. normal
 
-sample.sigma.sq <- function(y, X, beta, q) {
+sample.sigma.sq <- function(y, X, beta, q, a.pr) {
   n <- length(y)
   p <- ncol(X)
-  bb <- crossprod(y - crossprod(t(X), beta))/2
-  aa <- (n + 1)/2 + 1
+  bb <- crossprod(y - crossprod(t(X), beta))/2 + b.pr
+  aa <- (n + 1)/2 + a.pr
   return(rinvgamma(1, aa, 1/bb))
 }
 
@@ -136,7 +136,7 @@ epr.sampler <- function(X, y,
                        q,
                        sig.sq = NULL, tau.sq = NULL,
                        burn.in = 500, comp.lik = TRUE,
-                       b.start = NULL) {
+                       b.start = NULL, a.pr = a.pr, b.pr = b.pr) {
   p <- ncol(X)
   svd.X <- svd(X, nv = ncol(X))
   U <- svd.X$u
@@ -185,7 +185,8 @@ epr.sampler <- function(X, y,
       tau.sqs[i] <- sample.tau.sq(beta = betas[i - 1, ], q = q)
     }
     if (is.null(sig.sq)) {
-      sig.sqs[i] <- sample.sigma.sq(y = y, X = X, betas[i - 1, ], q = q)
+      sig.sqs[i] <- sample.sigma.sq(y = y, X = X, betas[i - 1, ], q = q,
+                                    a.pr = a.pr, b.pr = b.pr)
     }
     gammas[i, ] <- sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
     betas[i, ] <- sample.beta(A = A, b = b, gamma = gammas[i, ],
