@@ -32,7 +32,7 @@ log.lik <- function(y, X, beta, tau.sq, sig.sq, q, samp.sig.sq, samp.tau.sq) {
 }
 
 # Found method for MVNORM simulation in Polson, Scott, Windle (2014)
-samp.singmvtnorm <- function(beta.start, DUty, delta, d, Vt, sig.sq, W) {
+samp.singtmvnorm <- function(beta.start, DUty, delta, d, Vt, sig.sq, W) {
 
   p <- length(delta)
   z <- crossprod(t(Vt), beta.start)
