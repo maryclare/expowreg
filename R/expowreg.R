@@ -32,19 +32,19 @@ log.lik <- function(y, X, beta, tau.sq, sig.sq, q, samp.sig.sq, samp.tau.sq) {
 }
 
 # Found method for MVNORM simulation in Polson, Scott, Windle (2014)
-samp.singtmvnorm <- function(beta.start, DUty, delta, d, Vt, sig.sq, W) {
+samp.singmvtnorm <- function(beta.start, DUty, delta, d, Vt, sig.sq, W) {
 
   p <- length(delta)
   z <- crossprod(t(Vt), beta.start)
   for (i in 1:p) {
 
-    right <- delta - W[, -i]%*%z[-i]
+    right <- rep(delta, 2) - W[, -i]%*%z[-i]
     left <- W[, i]
     upp <- (right/left)[left > 0]
     low <- (right/left)[left < 0]
 
-    low.lim <- max(low)
     upp.lim <- min(upp)
+    low.lim <- max(low)
 
     mm <- DUty[i]/d[i]^2
     ss <- sig.sq/d[i]^2
@@ -101,11 +101,11 @@ sample.gamma <- function(beta, tau.sq, q) {
     for (i in 1:length(beta)) {
       lim.a <- 0
       lim.b <- 1/eta[i]
-      p.a <- pinvgamma(lim.a, shape = q + 1/q, scale = 2^(q/2))
-      p.b <- pinvgamma(lim.b, shape = q + 1/q, scale = 2^(q/2))
+      p.a <- pinvgamma(lim.a, shape = 1 + 1/q, scale = 2^(q/2))
+      p.b <- pinvgamma(lim.b, shape = 1 + 1/q, scale = 2^(q/2))
       if (p.a != p.b) {
         gamma.inv[i] <- rtrunc(1, spec = "invgamma", a = lim.a, b = lim.b,
-                               shape = q + 1/q, scale = 2^(q/2))
+                               shape = 1 + 1/q, scale = 2^(q/2))
       } else {
         gamma.inv[i] <- runif(1, lim.a, lim.b)
       }
@@ -117,11 +117,11 @@ sample.gamma <- function(beta, tau.sq, q) {
 
       lim.a <- eta[i]
       lim.b <- Inf
-      p.a <- pgamma(lim.a, shape = q + 1/q, rate = 2^(-q/2))
-      p.b <- pgamma(lim.b, shape = q + 1/q, rate = 2^(-q/2))
+      p.a <- pgamma(lim.a, shape = 1 + 1/q, rate = 2^(-q/2))
+      p.b <- pgamma(lim.b, shape = 1 + 1/q, rate = 2^(-q/2))
       if (p.a != p.b) {
       gamma[i] <- rtrunc(1, spec = "gamma", a = lim.a, b = lim.b,
-                         shape = q + 1/q, rate = 2^(-q/2))
+                         shape = 1 + 1/q, rate = 2^(-q/2))
       } else {
         gamma[i] <- runif(1, lim.a, 10^(100))
       }
