@@ -189,15 +189,11 @@ epr.sampler <- function(X, y,
                                     a.pr = a.pr, b.pr = b.pr)
     }
     gammas[i, ] <- sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
-    # betas[i, ] <- sample.beta(A = A, b = b, gamma = gammas[i, ],
-    #                           sig.sq = sig.sqs[i],
-    #                           tau.sq =  tau.sqs[i], q = q,
-    #                           beta.old = betas[i - 1, ], sing.A = sing.A, d = d,
-    #                           Vt = Vt, DUty = DUty, W = W, diag.A = diag.A)
-    delta <- sqrt(gamma(1/q)/gamma(3/q))*sqrt(tau.sqs[i]/2)*gammas[i, ]^(1/q)
-    betas[i, ] <- powreg::sampleBeta(start = betas[i - 1, ],
-                                     DUty = DUty, delta = delta, d = d, Vt = Vt,
-                                     sigsq = sig.sq, W = W)
+    betas[i, ] <- sample.beta(A = A, b = b, gamma = gammas[i, ],
+                              sig.sq = sig.sqs[i],
+                              tau.sq =  tau.sqs[i], q = q,
+                              beta.old = betas[i - 1, ], sing.A = sing.A, d = d,
+                              Vt = Vt, DUty = DUty, W = W, diag.A = diag.A)
     if (comp.lik) {
       lls[i] <- log.lik(y = y, X = X, beta = betas[i, ], tau.sq = tau.sqs[i],
                         sig.sq = sig.sqs[i], q = q, samp.sig.sq = is.null(sig.sq),
