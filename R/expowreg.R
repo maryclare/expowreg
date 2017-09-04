@@ -101,11 +101,11 @@ sample.gamma <- function(beta, tau.sq, q) {
     for (i in 1:length(beta)) {
       lim.a <- 0
       lim.b <- 1/eta[i]
-      p.a <- pinvgamma(lim.a, shape = 1 + 1/q, scale = 2^(q/2))
-      p.b <- pinvgamma(lim.b, shape = 1 + 1/q, scale = 2^(q/2))
+      p.a <- pinvgamma(lim.a, shape = 1, scale = 2^(q/2))
+      p.b <- pinvgamma(lim.b, shape = 1, scale = 2^(q/2))
       if (p.a != p.b) {
         gamma.inv[i] <- rtrunc(1, spec = "invgamma", a = lim.a, b = lim.b,
-                               shape = 1 + 1/q, scale = 2^(q/2))
+                               shape = 1, scale = 2^(q/2))
       } else {
         gamma.inv[i] <- runif(1, lim.a, lim.b)
       }
