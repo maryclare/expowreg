@@ -188,7 +188,8 @@ epr.sampler <- function(X, y,
       sig.sqs[i] <- sample.sigma.sq(y = y, X = X, betas[i - 1, ], q = q,
                                     a.pr = a.pr, b.pr = b.pr)
     }
-    gammas[i, ] <- powreg::sampleGamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
+    # gammas[i, ] <- powreg::sample.gamma(beta = betas[i - 1, ], tau.sq = tau.sqs[i], q = q)
+    gammas[i, ] <- powreg::sampleGamma(beta = betas[i - 1, ], tausq = tau.sqs[i], q = q)
     betas[i, ] <- sample.beta(A = A, b = b, gamma = gammas[i, ],
                               sig.sq = sig.sqs[i],
                               tau.sq =  tau.sqs[i], q = q,
