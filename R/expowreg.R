@@ -95,38 +95,9 @@ sample.beta <- function(A, b, gamma, sig.sq, tau.sq, q, beta.old, sing.A,
 }
 
 sample.gamma <- function(beta, tau.sq, q) {
-  eta <- (sqrt(gamma(3/q)/gamma(1/q))*sqrt(2/tau.sq)*abs(beta))^q
-  if (TRUE) { # if (q <= 4) {
-    gamma.inv <- numeric(length(beta))
-    for (i in 1:length(beta)) {
-      lim.a <- 0
-      lim.b <- 1/eta[i]
-      p.a <- pinvgamma(lim.a, shape = 1, scale = 2^(q/2))
-      p.b <- pinvgamma(lim.b, shape = 1, scale = 2^(q/2))
-      if (p.a != p.b) {
-        gamma.inv[i] <- rtrunc(1, spec = "invgamma", a = lim.a, b = lim.b,
-                               shape = 1, scale = 2^(q/2))
-      } else {
-        gamma.inv[i] <- runif(1, lim.a, lim.b)
-      }
-    }
-    gamma <- 1/gamma.inv
-  } else {
-    gamma <- numeric(length(beta))
-    for (i in 1:length(beta)) {
-
-      lim.a <- eta[i]
-      lim.b <- Inf
-      p.a <- pgamma(lim.a, shape = 1 + 1/q, rate = 2^(-q/2))
-      p.b <- pgamma(lim.b, shape = 1 + 1/q, rate = 2^(-q/2))
-      if (p.a != p.b) {
-      gamma[i] <- rtrunc(1, spec = "gamma", a = lim.a, b = lim.b,
-                         shape = 1 + 1/q, rate = 2^(-q/2))
-      } else {
-        gamma[i] <- runif(1, lim.a, 10^(100))
-      }
-    }
-  }
+  etaq <- (sqrt(gamma(3/q)/gamma(1/q))*sqrt(2/tau.sq)*abs(beta))^q
+  d <- 2^(-q/2)
+  gamma <- rexp(length(beta), d) + etaq
   return(gamma)
 }
 #' @export
