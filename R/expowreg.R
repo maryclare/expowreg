@@ -1,7 +1,4 @@
-# library(tmvtnorm)
-library(truncdist) # Use to sample from truncated gamma directly
-library(actuar) # Use to access inverse gamma probability function from truncdist functons
-library(BayesBridge) # Use to sample from truncated univ. normal
+library(powreg)
 
 sample.sigma.sq <- function(y, X, beta, q, a.pr) {
   n <- length(y)
@@ -50,8 +47,8 @@ samp.singtmvnorm <- function(beta.start, DUty, delta, d, Vt, sig.sq, W) {
     ss <- sig.sq/d[i]^2
 
     if (d[i] > 10^(-16)) {
-      z[i] <- BayesBridge::rtnorm(1, left = low.lim, right = upp.lim,
-                                  mu = mm, sig = sqrt(ss))
+      z[i] <- powreg::rtnormrej(l = low.lim, r = upp.lim,
+                                  mu = mm, sd = sqrt(ss))
     } else {
       z[i] <- runif(1, low.lim, upp.lim)
     }
@@ -83,9 +80,8 @@ sample.beta <- function(A, b, gamma, sig.sq, tau.sq, q, beta.old, sing.A,
   } else {
     beta <- numeric(length(gamma))
     too.small <- sqrt(diag(A)/sig.sq) <= 10^(-16)
-    beta[!too.small] <- BayesBridge::rtnorm(sum(!too.small),
-                                            left = -delta[!too.small], right = delta[!too.small],
-                                            mu = b[!too.small], sig = sqrt(sig.sq/diag(A)[!too.small]))
+    beta[!too.small] <- powreg::rtnormrej(l = -delta[!too.small], r = delta[!too.small],
+                                            mu = b[!too.small], sd = sqrt(sig.sq/diag(A)[!too.small]))
 
     beta[too.small] <- runif(sum(too.small), -delta[too.small], delta[too.small])
 
